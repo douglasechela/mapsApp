@@ -1,5 +1,7 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 
+import { Geolocation } from '@ionic-native/geolocation/ngx'; 
+
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -8,10 +10,11 @@ import { Component, ElementRef, ViewChild } from '@angular/core';
 export class HomePage {
 
   map: google.maps.Map;
+  minhaPosicao: google.maps.LatLng;
 
   @ViewChild('map', {read: ElementRef, static: false}) mapRef: ElementRef;
 
-  constructor() {}
+  constructor(private geoLocation: Geolocation) {}
 
   ionViewWillEnter(){
     this.exibirMapa();
@@ -21,17 +24,36 @@ export class HomePage {
     const posicao = new google.maps.LatLng(-16.650340, -49.228618);
     const opcoes = {
       center: posicao,
-      zoom: 15,
+      zoom: 1,
       disableDefaultUI: true
     };
 
     this.map = new google.maps.Map(this.mapRef.nativeElement, opcoes);
-    
-    new google.maps.Marker({
-      position: posicao,
-      map: this.map,
-      title: "Praça da Matriz",
-      animation: google.maps.Animation.BOUNCE
+
+    this.buscarPosicao();
+  }
+
+  buscarPosicao(){
+    this.geoLocation.getCurrentPosition().then((resp) => {
+
+      this.minhaPosicao = new google.maps.LatLng(resp.coords.latitude, resp.coords.longitude);
+
+      this.irParaMinhaPosicao();
+
+    }).catch((error) => {
+      console.log('Error getting location', error);
+    });
+  }
+
+  irParaMinhaPosicao(){
+    this.map.setCenter(this.minhaPosicao);
+    this.map.setZoom(15);
+
+    const marker = new google.maps.Marker({
+      position: this.minhaPosicao,
+      title: 'Minha Posição!',
+      animation: google.maps.Animation.BOUNCE,
+      map: this.map
     });
   }
 
